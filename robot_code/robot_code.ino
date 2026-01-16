@@ -127,7 +127,8 @@ void updateMotors() {
       Serial.println("Junction: Random TURN LEFT");
       // Links drehen
       m1->run(BACKWARD); m2->run(BACKWARD); // Rechts zurück
-      m3->run(FORWARD);  m4->run(FORWARD);  // Links vor
+      m3->run(FORWARD);  m4->run(FORWARD);
+        // Links vor
     } else {
       Serial.println("Junction: Random TURN RIGHT");
       // Rechts drehen
@@ -137,7 +138,7 @@ void updateMotors() {
     
     // WICHTIG: Kurze Zeit warten, damit der Roboter die Drehung auch ausführt
     // und nicht sofort wieder in die Logik springt (verhindert das Zittern).
-    delay(400); 
+    delay(2000); 
     
     // Nach dem Delay kurz stoppen oder Sensoren "freigeben"
     // (Hier nicht zwingend nötig, da er im nächsten Loop neu prüft)
