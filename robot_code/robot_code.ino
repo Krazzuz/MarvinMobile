@@ -95,11 +95,44 @@ bool isSensorIgnored(unsigned long sensorTimer){
   return millis() < sensorTimer;
 }
 
+void releaseMotors(){
+  m1->run(RELEASE); m2->run(RELEASE);
+  m3->run(RELEASE); m4->run(RELEASE);
+}
+
+void setMotorSpeed(int motorSpeed){
+  m1->setSpeed(motorSpeed); m2->setSpeed(motorSpeed);
+  m3->setSpeed(motorSpeed); m4->setSpeed(motorSpeed);
+}
+
+void leftCurve(int fastSpeed, int slowSpeed){
+  Serial.println("Junction: Random TURN RIGHT (Curve)");
+  m1->setSpeed(slowSpeed); m2->setSpeed(slowSpeed);
+  m1->run(BACKWARD); m2->run(BACKWARD);
+
+  m3->setSpeed(fastSpeed); m4->setSpeed(fastSpeed);
+  m3->run(FORWARD); m4->run(FORWARD);
+}
+
+void rightCurve(int fastSpeed, int slowSpeed){
+  Serial.println("Junction: Random TURN LEFT (Curve)");
+  m1->setSpeed(fastSpeed); m2->setSpeed(fastSpeed);
+  m1->run(FORWARD); m2->run(FORWARD);
+
+  m3->setSpeed(slowSpeed); m4->setSpeed(slowSpeed);
+  m3->run(BACKWARD); m4->run(BACKWARD);
+}
+
+void forwardCurve(){
+  m1->run(FORWARD); m2->run(FORWARD); 
+  m3->run(FORWARD); m4->run(FORWARD);
+}
+
+
 // --- Hauptlogik ---
 void updateMotors() {
   if (!motorsEnabled) {
-    m1->run(RELEASE); m2->run(RELEASE);
-    m3->run(RELEASE); m4->run(RELEASE);
+    releaseMotors();
     return;
   }
 
@@ -109,8 +142,7 @@ void updateMotors() {
   int middleSensor = digitalRead(IR_SENSOR_MIDDLE);
 
   // Basis-Geschwindigkeit setzen
-  m1->setSpeed(motorSpeed); m2->setSpeed(motorSpeed);
-  m3->setSpeed(motorSpeed); m4->setSpeed(motorSpeed);
+  setMotorSpeed(motorSpeed);
 
   // --- Logik-Prioritäten ---
   
@@ -124,25 +156,13 @@ void updateMotors() {
 
         if (randomNumber == 1) {
       // --- LINKSKURVE ---
-      Serial.println("Junction: Random TURN LEFT (Curve)");
-      m1->setSpeed(fastSpeed); m2->setSpeed(fastSpeed);
-      m1->run(FORWARD); m2->run(FORWARD);
-      
-      m3->setSpeed(slowSpeed); m4->setSpeed(slowSpeed);
-      m3->run(BACKWARD); m4->run(BACKWARD);
-      
+      leftCurve(fastSpeed, slowSpeed);      
       delay(750); // Zeit für die Kurve
 
     } 
     else if (randomNumber == 2) {
       // --- RECHTSKURVE ---
-      Serial.println("Junction: Random TURN RIGHT (Curve)");
-      m1->setSpeed(slowSpeed); m2->setSpeed(slowSpeed);
-      m1->run(BACKWARD); m2->run(BACKWARD);
-      
-      m3->setSpeed(fastSpeed); m4->setSpeed(fastSpeed);
-      m3->run(FORWARD); m4->run(FORWARD);
-      
+      rightCurve(fastSpeed, slowSpeed);      
       delay(750); // Zeit für die Kurve
     }
   }
@@ -158,24 +178,12 @@ void updateMotors() {
 
     if (randomNumber == 1) {
       // --- LINKSKURVE ---
-      Serial.println("Junction: Random TURN LEFT (Curve)");
-      m1->setSpeed(fastSpeed); m2->setSpeed(fastSpeed);
-      m1->run(FORWARD); m2->run(FORWARD);
-      
-      m3->setSpeed(slowSpeed); m4->setSpeed(slowSpeed);
-      m3->run(BACKWARD); m4->run(BACKWARD);
-      
+      leftCurve(fastSpeed, slowSpeed);
       delay(750); // Zeit für die Kurve
 
     } else if (randomNumber == 2) {
       // --- RECHTSKURVE ---
-      Serial.println("Junction: Random TURN RIGHT (Curve)");
-      m1->setSpeed(slowSpeed); m2->setSpeed(slowSpeed);
-      m1->run(BACKWARD); m2->run(BACKWARD);
-      
-      m3->setSpeed(fastSpeed); m4->setSpeed(fastSpeed);
-      m3->run(FORWARD); m4->run(FORWARD);
-      
+      rightCurve(fastSpeed, slowSpeed);      
       delay(750); // Zeit für die Kurve
 
     } else {
@@ -183,44 +191,34 @@ void updateMotors() {
       Serial.println("Junction: Random STRAIGHT");
       
       // Standard-Geschwindigkeit nutzen
-      m1->setSpeed(motorSpeed); m2->setSpeed(motorSpeed);
-      m3->setSpeed(motorSpeed); m4->setSpeed(motorSpeed);
+      setMotorSpeed(motorSpeed);
       
       // Einfach alle vorwärts
-      m1->run(FORWARD); m2->run(FORWARD);
-      m3->run(FORWARD); m4->run(FORWARD);
+      forwardCurve();
       
       // Kürzere Zeit! Wir müssen nur über die schwarze Querlinie kommen.
-      // 1000ms wäre hier viel zu lang.
       delay(400); 
     }
     
     // Nach dem Manöver kurz entspannen
-    m1->run(RELEASE); m2->run(RELEASE);
-    m3->run(RELEASE); m4->run(RELEASE);
+    releaseMotors();
     delay(100);
   }
-
+  
   // 2. KORREKTUR RECHTS (Rechter Sensor auf Schwarz)
   else if (rightSensor == HIGH) {
     // Nur korrigieren, wenn wir nicht gerade eine Kreuzung ignorieren sollten
-    m1->run(FORWARD);  m2->run(FORWARD);
-    m3->run(BACKWARD); m4->run(BACKWARD);
-    Serial.println("Auto: CORRECTION RIGHT");
+    rightCurve(motorSpeed,motorSpeed);
   }
   
   // 3. KORREKTUR LINKS (Linker Sensor auf Schwarz)
   else if (leftSensor == HIGH) {
-    m1->run(BACKWARD); m2->run(BACKWARD);
-    m3->run(FORWARD);  m4->run(FORWARD);
-    Serial.println("Auto: CORRECTION LEFT");
+    leftCurve(motorSpeed,motorSpeed);
   }
   
   // 4. GERADEAUS (Standard: Beide Sensoren auf Weiß/LOW)
   else {
-    m1->run(FORWARD); m2->run(FORWARD); 
-    m3->run(FORWARD); m4->run(FORWARD);
-    Serial.println("Auto: FORWARD");
+    forwardCurve();
   }
 }
 
