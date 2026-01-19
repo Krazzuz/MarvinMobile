@@ -68,3 +68,5 @@ The `robot_code.ino` file includes:
 - `updateMotors()`: Contains the logic for the autonomous line-following.
 - `executeManualCommand()`: Handles manual control logic.
 - `makePage()`: Generates the HTML, CSS, and JavaScript for the web interface.
+
+![Wiring Schematic](./assets/1.png)
